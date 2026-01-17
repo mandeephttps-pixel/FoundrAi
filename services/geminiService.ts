@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserPreferences, BusinessIdea, UserStatus } from "../types";
 
@@ -83,10 +82,15 @@ export async function generateBusinessIdeas(
   selectedCategories: string[],
   userStatus: UserStatus
 ): Promise<BusinessIdea[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("API_KEY is missing. Please set it in Vercel Environment Variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const count = userStatus === 'pro' ? 20 : 10;
-  const isPro = userStatus === 'pro';
 
   const prompt = `
     Act as a world-class AI Business Idea Generation Engine.
@@ -97,9 +101,9 @@ export async function generateBusinessIdeas(
     
     CRITICAL INSTRUCTIONS:
     1. If user_status is "pro", you MUST generate detailed execution plans (Canvas, GTM, Pricing, 30-60-90 Roadmap, Tool Stacks).
-    2. If user_status is "guest" or "logged_in_free", do NOT provide execution details. Leave them empty or generic.
+    2. If user_status is "guest" or "logged_in_free", provide useful but less detailed execution details.
     3. Ensure ideas are innovative for 2025 and scannable for mobile.
-    4. For "pro" users, provide India-friendly pricing and localized tool stack examples (e.g. Razorpay for payments in India).
+    4. Provide localized tool stack examples (e.g. Razorpay for payments if location is India).
   `;
 
   try {
@@ -117,8 +121,8 @@ export async function generateBusinessIdeas(
       ...item,
       id: Math.random().toString(36).substr(2, 9) + index,
     }));
-  } catch (error) {
-    console.error("Generation failed:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    throw new Error(error.message || "Failed to generate ideas. The AI engine might be busy.");
   }
 }

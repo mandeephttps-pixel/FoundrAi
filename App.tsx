@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Rocket, Search, Settings2, Bookmark, RefreshCw, 
   Lightbulb, CheckCircle2, AlertCircle, Menu, X, 
-  Sparkles, BrainCircuit, MessageCircle, Crown, ChevronRight, Lock, User,
-  Mail, Calendar, LogOut, ChevronLeft, CreditCard, ExternalLink,
+  Sparkles, BrainCircuit, MessageCircle, Crown, Lock, User,
+  Mail, LogOut, ChevronLeft, CreditCard,
   Brain, Cloud, Wallet, ShoppingBag, HeartPulse, GraduationCap, Leaf,
   Home, Utensils, Sprout, Truck, Gamepad2, Telescope, Globe, Cpu, Tag, Wrench, Dog,
   Laptop, Store, Briefcase, Factory, FileBadge, Ship, Zap, Smartphone, Layers, Settings, FileText, Video, Target,
@@ -20,7 +19,6 @@ import {
 import { generateBusinessIdeas } from './services/geminiService';
 import IdeaCard from './components/IdeaCard';
 
-// Comprehensive Icon Mapping for all sectors
 const IconMap: Record<string, any> = {
   Brain, Cloud, Wallet, ShoppingBag, HeartPulse, GraduationCap, Leaf,
   Home, Utensils, Sprout, Truck, Gamepad2, Telescope, Globe, Cpu, Tag, Wrench, Dog,
@@ -99,9 +97,8 @@ const App: React.FC = () => {
       localStorage.setItem('foundr_daily_gens', newDailyGens.toString());
       localStorage.setItem('foundr_last_gen_date', new Date().toDateString());
       setView('results');
-    } catch (err) {
-      setError("AI engine busy. Retrying...");
-      setTimeout(handleGenerate, 2000);
+    } catch (err: any) {
+      setError(err.message || "AI engine busy. Please check your API key.");
     } finally {
       setIsLoading(false);
     }
@@ -165,7 +162,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] text-slate-900 font-sans">
-      {/* Mobile Top Header */}
       <header className="fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-100 z-50 flex items-center justify-between px-6 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-indigo-600 rounded-lg text-white shadow-sm"><Rocket size={18} /></div>
@@ -181,11 +177,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Sidebar Navigation */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-[60] w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      <aside className={`fixed inset-y-0 left-0 z-[60] w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-full flex flex-col p-6">
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-2">
@@ -194,7 +186,6 @@ const App: React.FC = () => {
             </div>
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400"><X size={20} /></button>
           </div>
-
           <div className="flex-1 space-y-1">
             <NavItem id="generate" label="Idea Generator" icon={Sparkles} />
             <NavItem id="results" label="Market Feed" icon={Search} />
@@ -202,24 +193,20 @@ const App: React.FC = () => {
             <NavItem id="mentor" label="AI Advisor" icon={BrainCircuit} pro />
             <NavItem id="pricing" label="Foundr Pro" icon={Crown} />
           </div>
-
           <div className="mt-auto pt-6 border-t border-slate-50">
             {currentUser ? (
               <button onClick={handleLogout} className="w-full flex items-center gap-4 px-5 py-4 text-slate-400 hover:text-rose-500 transition-colors text-sm font-black">
-                <LogOut size={20} />
-                Sign Out
+                <LogOut size={20} /> Sign Out
               </button>
             ) : (
               <button onClick={() => { setShowAuthModal(true); setSidebarOpen(false); }} className="w-full flex items-center gap-4 px-5 py-4 text-indigo-600 bg-indigo-50 rounded-2xl text-sm font-black">
-                <User size={20} />
-                Join Foundr
+                <User size={20} /> Join Foundr
               </button>
             )}
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="lg:pl-72 pt-16 lg:pt-0 min-h-screen">
         <div className="max-w-4xl mx-auto p-6 lg:p-12">
           {view === 'generate' && (
@@ -228,13 +215,15 @@ const App: React.FC = () => {
                 <h2 className="text-4xl lg:text-5xl font-black text-slate-900 mb-4">What are we building?</h2>
                 <p className="text-lg text-slate-500 font-medium">Pick your sectors. Our AI finds the gaps.</p>
               </div>
-
               {error && (
-                <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-sm font-bold animate-pulse">
-                  <AlertCircle size={18} /> {error}
+                <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex flex-col gap-2 text-rose-600 text-sm font-bold">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle size={18} />
+                    <span>Error Detected</span>
+                  </div>
+                  <p className="font-medium opacity-80">{error}</p>
                 </div>
               )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div className="space-y-6">
                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Settings</h3>
@@ -265,7 +254,6 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-6">
                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Sectors</h3>
                   <div className="h-[400px] overflow-y-auto pr-2 space-y-6 custom-scrollbar">
@@ -289,18 +277,12 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              <button 
-                onClick={handleGenerate}
-                disabled={isLoading}
-                className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-600 transition-all disabled:opacity-50"
-              >
+              <button onClick={handleGenerate} disabled={isLoading} className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-600 transition-all disabled:opacity-50">
                 {isLoading ? <RefreshCw className="animate-spin" /> : <Sparkles />}
                 {isLoading ? 'Scanning Market Gaps...' : 'Generate 2025 Blueprint'}
               </button>
             </div>
           )}
-
           {view === 'results' && (
             <div className="animate-in fade-in slide-in-from-right-8">
               <div className="flex items-center justify-between mb-8">
@@ -313,21 +295,11 @@ const App: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {ideas.map((idea, i) => (
-                  <IdeaCard 
-                    key={idea.id} 
-                    idea={idea} 
-                    index={i + 1} 
-                    total={ideas.length}
-                    userPlan={getUserStatus() === 'pro' ? 'Pro' : 'Free'}
-                    onSave={toggleSaveIdea}
-                    isSaved={!!savedIdeas.find(s => s.id === idea.id)}
-                    onUpgrade={() => setView('pricing')}
-                  />
+                  <IdeaCard key={idea.id} idea={idea} index={i + 1} total={ideas.length} userPlan={getUserStatus() === 'pro' ? 'Pro' : 'Free'} onSave={toggleSaveIdea} isSaved={!!savedIdeas.find(s => s.id === idea.id)} onUpgrade={() => setView('pricing')} />
                 ))}
               </div>
             </div>
           )}
-
           {view === 'saved' && (
             <div className="animate-in fade-in slide-in-from-left-8">
               <div className="mb-10">
@@ -342,22 +314,12 @@ const App: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {savedIdeas.map((idea, i) => (
-                    <IdeaCard 
-                      key={idea.id} 
-                      idea={idea} 
-                      index={i + 1} 
-                      total={savedIdeas.length}
-                      userPlan={getUserStatus() === 'pro' ? 'Pro' : 'Free'}
-                      onSave={toggleSaveIdea}
-                      isSaved={true}
-                      onUpgrade={() => setView('pricing')}
-                    />
+                    <IdeaCard key={idea.id} idea={idea} index={i + 1} total={savedIdeas.length} userPlan={getUserStatus() === 'pro' ? 'Pro' : 'Free'} onSave={toggleSaveIdea} isSaved={true} onUpgrade={() => setView('pricing')} />
                   ))}
                 </div>
               )}
             </div>
           )}
-
           {view === 'pricing' && (
             <div className="animate-in fade-in zoom-in-95">
               <div className="text-center mb-12">
@@ -386,7 +348,6 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-
           {view === 'mentor' && (
             <div className="animate-in fade-in slide-in-from-bottom-8">
               <div className="bg-white rounded-[2.5rem] p-12 text-center border border-slate-100 shadow-xl shadow-slate-200/40">
@@ -405,7 +366,6 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-
           {view === 'profile' && currentUser && (
             <div className="animate-in fade-in slide-in-from-top-8">
               <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/40 text-center">
@@ -435,7 +395,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Auth Modal */}
       {showAuthModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200">

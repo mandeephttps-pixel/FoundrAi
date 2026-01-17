@@ -44,7 +44,7 @@ const App: React.FC = () => {
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
 
   const [dailyGens, setDailyGens] = useState(0);
-  const FREE_DAILY_LIMIT = 100;
+  const FREE_DAILY_LIMIT = 5;
 
   const [selectedCats, setSelectedCats] = useState<string[]>(["AI & Machine Learning"]);
   const [ideas, setIdeas] = useState<BusinessIdea[]>([]);
@@ -84,11 +84,13 @@ const App: React.FC = () => {
       return;
     }
     if (selectedCats.length === 0) {
-      setError("Pick at least one sector");
+      setError("Pick at least one sector to continue");
       return;
     }
+    
     setError(null);
     setIsLoading(true);
+    
     try {
       const result = await generateBusinessIdeas(prefs, selectedCats, status);
       setIdeas(result);
@@ -98,7 +100,7 @@ const App: React.FC = () => {
       localStorage.setItem('foundr_last_gen_date', new Date().toDateString());
       setView('results');
     } catch (err: any) {
-      setError(err.message || "AI engine busy. Please check your API key.");
+      setError(err.message || "We encountered an issue with the AI Engine.");
     } finally {
       setIsLoading(false);
     }
@@ -215,15 +217,23 @@ const App: React.FC = () => {
                 <h2 className="text-4xl lg:text-5xl font-black text-slate-900 mb-4">What are we building?</h2>
                 <p className="text-lg text-slate-500 font-medium">Pick your sectors. Our AI finds the gaps.</p>
               </div>
+
               {error && (
-                <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex flex-col gap-2 text-rose-600 text-sm font-bold">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle size={18} />
-                    <span>Error Detected</span>
+                <div className="mb-8 p-6 bg-rose-50 border border-rose-100 rounded-[2rem] flex flex-col gap-3 animate-in fade-in">
+                  <div className="flex items-center gap-3 text-rose-600">
+                    <AlertCircle size={22} className="shrink-0" />
+                    <span className="font-black text-sm uppercase tracking-wider">Market Analysis Interrupted</span>
                   </div>
-                  <p className="font-medium opacity-80">{error}</p>
+                  <p className="text-slate-600 text-sm font-medium leading-relaxed">{error}</p>
+                  <button 
+                    onClick={handleGenerate}
+                    className="w-fit px-6 py-2 bg-rose-600 text-white rounded-xl text-xs font-black shadow-lg shadow-rose-200 active:scale-95 transition-all"
+                  >
+                    Try Reconnecting
+                  </button>
                 </div>
               )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div className="space-y-6">
                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Settings</h3>
@@ -277,20 +287,25 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <button onClick={handleGenerate} disabled={isLoading} className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-600 transition-all disabled:opacity-50">
+              <button 
+                onClick={handleGenerate} 
+                disabled={isLoading} 
+                className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-600 transition-all disabled:opacity-50"
+              >
                 {isLoading ? <RefreshCw className="animate-spin" /> : <Sparkles />}
-                {isLoading ? 'Scanning Market Gaps...' : 'Generate 2025 Blueprint'}
+                {isLoading ? 'Consulting Market Gaps...' : 'Generate 2025 Blueprints'}
               </button>
             </div>
           )}
+          
           {view === 'results' && (
             <div className="animate-in fade-in slide-in-from-right-8">
               <div className="flex items-center justify-between mb-8">
                 <button onClick={() => setView('generate')} className="flex items-center gap-2 text-slate-400 font-bold text-sm hover:text-indigo-600">
-                  <ChevronLeft size={16} /> New Search
+                  <ChevronLeft size={16} /> New Parameters
                 </button>
                 <div className="text-[10px] font-black text-slate-400 uppercase bg-slate-100 px-3 py-1 rounded-full">
-                  {ideas.length} Ideas Generated
+                  {ideas.length} Ventures Discovered
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -300,10 +315,11 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+
           {view === 'saved' && (
             <div className="animate-in fade-in slide-in-from-left-8">
               <div className="mb-10">
-                <h2 className="text-4xl font-black text-slate-900 mb-4">Saved Ideas</h2>
+                <h2 className="text-4xl font-black text-slate-900 mb-4">Saved Lab</h2>
                 <p className="text-lg text-slate-500 font-medium">Your portfolio of high-potential ventures.</p>
               </div>
               {savedIdeas.length === 0 ? (
@@ -320,12 +336,13 @@ const App: React.FC = () => {
               )}
             </div>
           )}
+
           {view === 'pricing' && (
             <div className="animate-in fade-in zoom-in-95">
               <div className="text-center mb-12">
                 <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 inline-block">Pro Access</span>
                 <h2 className="text-4xl font-black text-slate-900 mb-4">Go From Idea to Execution</h2>
-                <p className="text-slate-500 font-medium">Unlock the full power of our AI Execution Engine.</p>
+                <p className="text-slate-500 font-medium">Unlock Search Grounding and Deep Roadmaps.</p>
               </div>
               <div className="max-w-md mx-auto bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10"><Crown size={120} /></div>
@@ -335,7 +352,7 @@ const App: React.FC = () => {
                     <span className="text-slate-400 font-bold">/ lifetime</span>
                   </div>
                   <ul className="space-y-4 mb-10">
-                    {['Unlimited Idea Generation', 'Complete Execution Plans', 'GTM & Pricing Strategies', '30-60-90 Day Roadmaps', 'AI Mentor Insights'].map(f => (
+                    {['Google Search Grounding', 'Unlimited Discovery', '30-60-90 Day Execution Roadmaps', 'GTM & Pricing Strategies', 'AI Advisor Insights'].map(f => (
                       <li key={f} className="flex items-center gap-3 text-sm font-bold">
                         <CheckCircle2 size={18} className="text-indigo-400" /> {f}
                       </li>
@@ -348,6 +365,7 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+
           {view === 'mentor' && (
             <div className="animate-in fade-in slide-in-from-bottom-8">
               <div className="bg-white rounded-[2.5rem] p-12 text-center border border-slate-100 shadow-xl shadow-slate-200/40">
@@ -366,6 +384,7 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+
           {view === 'profile' && currentUser && (
             <div className="animate-in fade-in slide-in-from-top-8">
               <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/40 text-center">
@@ -399,7 +418,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-black text-slate-900">{authMode === 'login' ? 'Welcome Back' : 'Create Founder Account'}</h2>
+              <h2 className="text-2xl font-black text-slate-900">{authMode === 'login' ? 'Welcome Back' : 'Founder Account'}</h2>
               <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600"><X /></button>
             </div>
             <form onSubmit={handleAuth} className="space-y-4">

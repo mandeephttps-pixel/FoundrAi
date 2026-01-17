@@ -21,7 +21,7 @@ const BUSINESS_IDEA_SCHEMA = {
       whyWorkIn2025: { type: Type.STRING },
       
       marketDemandScore: { type: Type.NUMBER },
-      competitionLevel: { type: Type.STRING },
+      competitionLevel: { type: Type.STRING, enum: ["Low", "Medium", "High"] },
       executionDifficulty: { type: Type.NUMBER },
       riskScore: { type: Type.NUMBER },
       
@@ -84,45 +84,61 @@ export async function generateBusinessIdeas(
 ): Promise<BusinessIdea[]> {
   const apiKey = process.env.API_KEY;
   
-  if (!apiKey || apiKey === "undefined") {
-    throw new Error("API_KEY is missing. Please set it in Vercel Environment Variables.");
+  if (!apiKey || apiKey === "undefined" || apiKey === "API_KEY") {
+    throw new Error("Missing API_KEY. Ensure your Gemini API Key is added to Vercel Environment Variables.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  
-  const count = userStatus === 'pro' ? 20 : 10;
+  const count = userStatus === 'pro' ? 12 : 6;
 
   const prompt = `
-    Act as a world-class AI Business Idea Generation Engine.
-    User Status: ${userStatus}
-    Generate EXACTLY ${count} unique, high-potential business ideas for: ${selectedCategories.join(", ")}.
+    Act as a world-class Startup Generator and Market Analyst.
+    Task: Generate ${count} disruptive business ideas for: ${selectedCategories.join(", ")}.
     
-    User Profile: Budget ${prefs.budget}, Skill ${prefs.skillLevel}, Commitment ${prefs.timeAvailability}, Location ${prefs.geography}.
+    Context:
+    - User Profile: Budget: ${prefs.budget}, Skills: ${prefs.skillLevel}, Time: ${prefs.timeAvailability}, Location: ${prefs.geography}.
+    - Model: 2025 Trends & Market Gaps.
     
-    CRITICAL INSTRUCTIONS:
-    1. If user_status is "pro", you MUST generate detailed execution plans (Canvas, GTM, Pricing, 30-60-90 Roadmap, Tool Stacks).
-    2. If user_status is "guest" or "logged_in_free", provide useful but less detailed execution details.
-    3. Ensure ideas are innovative for 2025 and scannable for mobile.
-    4. Provide localized tool stack examples (e.g. Razorpay for payments if location is India).
+    If user_status is 'pro', provide deep execution details (Canvas, GTM, Roadmap).
+    Focus on practical, high-demand ideas that solve real friction in 2025.
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+    const config: any = {
+      model: "gemini-3-pro-preview",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: BUSINESS_IDEA_SCHEMA,
       },
-    });
+    };
 
-    const results = JSON.parse(response.text || "[]");
-    return results.slice(0, count).map((item: any, index: number) => ({
+    // Use Search Grounding for better Market Analysis if Pro
+    if (userStatus === 'pro') {
+      config.config.tools = [{ googleSearch: {} }];
+    }
+
+    const response = await ai.models.generateContent(config);
+
+    if (!response.text) {
+      throw new Error("Empty response from AI engine.");
+    }
+
+    const results = JSON.parse(response.text);
+    return results.map((item: any) => ({
       ...item,
-      id: Math.random().toString(36).substr(2, 9) + index,
+      id: Math.random().toString(36).substr(2, 9)
     }));
   } catch (error: any) {
     console.error("Gemini API Error:", error);
-    throw new Error(error.message || "Failed to generate ideas. The AI engine might be busy.");
+    
+    if (error.status === 429) {
+      throw new Error("Rate limit exceeded. Please wait a moment or upgrade your Google AI Studio quota.");
+    }
+    if (error.status === 401 || error.status === 403) {
+      throw new Error("Invalid API Key. Please verify the API_KEY in your Vercel project settings.");
+    }
+    
+    throw new Error(error.message || "The AI engine is currently under high load. Please try again in 30 seconds.");
   }
 }
